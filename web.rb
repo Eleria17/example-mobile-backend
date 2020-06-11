@@ -280,7 +280,7 @@ post '/confirm_payment_intent' do
         :shipping => payload[:shipping],
         :return_url => payload[:return_url],
         :confirm => true,
-        :confirmation_method => "manual",
+        :confirmation_method => "automatic",
         # Set use_stripe_sdk for mobile apps using Stripe iOS SDK v16.0.0+ or Stripe Android SDK v10.0.0+ 
         # Do not set this on apps using Stripe SDK versions below this.
         :use_stripe_sdk => true, 
