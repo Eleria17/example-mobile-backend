@@ -276,7 +276,7 @@ post '/confirm_payment_intent' do
         :source => payload[:source],
         :payment_method => payload[:payment_method_id],
         :payment_method_types => payment_methods_for_country(payload[:country]),
-        :description => Paiement Triipcool",
+        :description => "Paiement Triipcool",
         :shipping => payload[:shipping],
         :return_url => payload[:return_url],
         :confirm => true,
