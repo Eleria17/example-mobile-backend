@@ -50,7 +50,7 @@ def authenticate!  # This code simulates "loading the Stripe customer for your c
       @customer = Stripe::Customer.retrieve(default_customer_id)
     else
       begin
-     #   @customer = create_customer()
+        @customer = create_customer()
         if (Stripe.api_key.start_with?('sk_test_'))          # only attach test cards in testmode
           attach_customer_test_cards()
         end
@@ -214,7 +214,7 @@ post '/confirm_payment_intent' do
     payload = Sinatra::IndifferentHash[JSON.parse(request.body.read)]
   end
   begin
-    if payload[:payment_intent_id] Confirm the PaymentIntent
+    if payload[:payment_intent_id] # Confirm the PaymentIntent
       payment_intent = Stripe::PaymentIntent.confirm(payload[:payment_intent_id], {:use_stripe_sdk => true})
     elsif payload[:payment_method_id]      # Calculate how much to charge the customer
       amount = payload[:amount]      # Create and confirm the PaymentIntent
