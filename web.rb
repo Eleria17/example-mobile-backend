@@ -153,7 +153,8 @@ post '/create_setup_intent' do
     setup_intent = Stripe::SetupIntent.create({
       payment_method: payload[:payment_method],
       return_url: payload[:return_url],
-      confirm: payload[:payment_method] != nil,#      customer: payload[:customer_id],
+      confirm: payload[:payment_method] != nil,
+      customer: nil, #payload[:customer_id],
       use_stripe_sdk: payload[:payment_method] != nil ? true : nil,
       payment_method_types: payment_methods_for_country(payload[:country]),
     })
@@ -220,7 +221,8 @@ post '/confirm_payment_intent' do
       amount = payload[:amount]      # Create and confirm the PaymentIntent
       payment_intent = Stripe::PaymentIntent.create(
         :amount => amount,
-        :currency => 'eur',#        :customer => payload[:customer_id] || @customer.id,
+        :currency => 'eur',
+        :customer => nil, # payload[:customer_id] || @customer.id,
         :source => payload[:source],
         :payment_method => payload[:payment_method_id],
         :payment_method_types => payment_methods_for_country(payload[:country]),
