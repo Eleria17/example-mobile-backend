@@ -21,6 +21,7 @@ get '/' do
 end
 
 post '/ephemeral_keys' do
+  # on test le support du client ID 
   authenticate!
   begin
     key = Stripe::EphemeralKey.create(
@@ -51,9 +52,6 @@ def authenticate!  # This code simulates "loading the Stripe customer for your c
     else
       begin
         @customer = create_customer()
-        if (Stripe.api_key.start_with?('sk_test_'))          # only attach test cards in testmode
-          attach_customer_test_cards()
-        end
       rescue Stripe::InvalidRequestError
       end
     end
@@ -69,27 +67,6 @@ def create_customer
       :my_customer_id => '72F8C533-FCD5-47A6-A45B-3956CA8C792D',
     },
   )
-end
-
-def attach_customer_test_cards
-  # Attach some test cards to the customer for testing convenience.# See https://stripe.com/docs/payments/3d-secure#three-ds-cards and https://stripe.com/docs/mobile/android/authentication#testing
-  ['4000000000003220', '4000000000003063', '4000000000003238', '4000000000003246', '4000000000003253', '4242424242424242'].each { |cc_number|
-    payment_method = Stripe::PaymentMethod.create({
-      type: 'card',
-      card: {
-        number: cc_number,
-        exp_month: 8,
-        exp_year: 2022,
-        cvc: '123',
-      },
-    })
-    Stripe::PaymentMethod.attach(
-      payment_method.id,
-      {
-        customer: @customer.id,
-      }
-    )
-  }
 end
 
 # This endpoint responds to webhooks sent by Stripe. To use it, you'll need to add its URL (https://{your-app-name}.herokuapp.com/stripe-webhook) in the webhook settings section of the Dashboard. https://dashboard.stripe.com/account/webhooks See https://stripe.com/docs/webhooks
@@ -154,7 +131,7 @@ post '/create_setup_intent' do
       payment_method: payload[:payment_method],
       return_url: payload[:return_url],
       confirm: payload[:payment_method] != nil,
-      customer: nil, #payload[:customer_id],
+      customer: payload[:customer_id],
       use_stripe_sdk: payload[:payment_method] != nil ? true : nil,
       payment_method_types: payment_methods_for_country(payload[:country]),
     })
@@ -184,8 +161,9 @@ post '/create_payment_intent' do
   begin
     payment_intent = Stripe::PaymentIntent.create(
       :amount => amount,
-      :currency => 'eur',#      :customer => payload[:customer_id] || @customer.id,
-      :description => "Service triipCool",
+      :currency => 'eur',
+      :customer => payload[:customer_id] || @customer.id,
+      :description => "Paiement triipCool",
       :capture_method => ENV['CAPTURE_METHOD'] == "manual" ? "manual" : "automatic",
       payment_method_types: payment_methods_for_country(payload[:country]),
       :metadata => {
@@ -198,6 +176,7 @@ post '/create_payment_intent' do
   end
   log_info("PaymentIntent successfully created: #{payment_intent.id}")
   status 200
+  
   return {
     :intent => payment_intent.id,
     :secret => payment_intent.client_secret,
@@ -222,7 +201,7 @@ post '/confirm_payment_intent' do
       payment_intent = Stripe::PaymentIntent.create(
         :amount => amount,
         :currency => 'eur',
-        :customer => nil, # payload[:customer_id] || @customer.id,
+        :customer => payload[:customer_id] || @customer.id,
         :source => payload[:source],
         :payment_method => payload[:payment_method_id],
         :payment_method_types => payment_methods_for_country(payload[:country]),
@@ -238,6 +217,7 @@ post '/confirm_payment_intent' do
           :order_id => '5278735C-1F40-407D-933A-286E463E72D8',
         }.merge(payload[:metadata] || {}),
       )
+	  Stripe::PaymentMethods.detach( payload[:payment_method_id] ); # pour liberer la carte bleue
     else
       status 400
       return log_info("Error: Missing params. Pass payment_intent_id to confirm or payment_method to create")
