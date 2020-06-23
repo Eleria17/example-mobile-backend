@@ -217,7 +217,7 @@ post '/confirm_payment_intent' do
           :order_id => '5278735C-1F40-407D-933A-286E463E72D8',
         }.merge(payload[:metadata] || {}),
       )
-	  Stripe::PaymentMethods.detach( payload[:payment_method_id] ); # pour liberer la carte bleue
+	  Stripe::PaymentMethod.detach( payload[:payment_method_id] ) # pour liberer la carte bleue
     else
       status 400
       return log_info("Error: Missing params. Pass payment_intent_id to confirm or payment_method to create")
